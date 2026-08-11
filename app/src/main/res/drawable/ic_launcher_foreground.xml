@@ -1,0 +1,27 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Lightning Bolt & Math Symbol Emblem centered within 66dp zone -->
+    <!-- Plus symbol top left -->
+    <path
+        android:fillColor="#FF818CF8"
+        android:pathData="M34,32h4v8h8v4h-8v8h-4v-8h-8v-4h8z" />
+    <!-- Multiply symbol top right -->
+    <path
+        android:fillColor="#FF38BDF8"
+        android:pathData="M70.5,33.5l3,3l-5,5l5,5l-3,3l-5,-5l-5,5l-3,-3l5,-5l-5,-5l3,-3l5,5z" />
+    <!-- Center Lightning Bolt -->
+    <path
+        android:fillColor="#FFFACC15"
+        android:pathData="M56,22L38,54h14l-6,32l24,-34H56z" />
+    <!-- Equals symbol bottom right -->
+    <path
+        android:fillColor="#FF34D399"
+        android:pathData="M64,68h16v3.5h-16z M64,75.5h16v3.5h-16z" />
+    <!-- Minus symbol bottom left -->
+    <path
+        android:fillColor="#FFF87171"
+        android:pathData="M26,71h16v4h-16z" />
+</vector>

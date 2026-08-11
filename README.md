@@ -4,6 +4,15 @@ A 100% offline, native Android application built with Jetpack Compose for fast m
 
 ---
 
+## 📲 Download & Access
+
+- **Live Web App / Preview**: [Launch Speed Math App](https://ais-pre-hlvupwctiqye3r6jvd6oa4-284583158183.asia-east1.run.app)
+- **APK & Project Source**:
+  - Open the app settings menu in AI Studio.
+  - Click **Export / Download** to download the project source as a `.zip` or generate the standalone Android APK (`.apk`) / App Bundle (`.aab`).
+
+---
+
 ## 🌟 Key Features
 
 - **Topic Wise Practice**: Dedicated question generators for each math topic with EASY, MEDIUM, and HARD difficulty levels.

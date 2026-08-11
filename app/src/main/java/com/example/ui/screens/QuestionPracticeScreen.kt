@@ -8,15 +8,18 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -59,11 +62,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.domain.model.GeneratedQuestion
 import com.example.ui.navigation.Screen
 import com.example.ui.theme.AmberStreak
 import com.example.ui.theme.GreenCorrect
 import com.example.ui.theme.RedWrong
 import com.example.ui.viewmodel.AnswerFeedback
+import com.example.ui.viewmodel.PracticeState
 import com.example.ui.viewmodel.PracticeViewModel
 import java.util.Locale
 
@@ -197,192 +202,292 @@ fun QuestionPracticeScreen(
             )
         }
     ) { innerPadding ->
-        Column(
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(horizontal = 16.dp)
         ) {
-            // Progress Bar
-            LinearProgressIndicator(
-                progress = { if (totalCount > 0) currentNumber.toFloat() / totalCount else 0f },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(6.dp)
-                    .clip(RoundedCornerShape(3.dp)),
-                color = MaterialTheme.colorScheme.primary
-            )
+            val isWideScreen = maxWidth >= 600.dp
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Score Counter Bar (Correct / Wrong)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "Correct: ${practiceState.correctCount}",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp,
-                    color = GreenCorrect
-                )
-                Text(
-                    text = "Wrong: ${practiceState.wrongCount}",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp,
-                    color = RedWrong
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Big Question Card
-            Card(
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                ),
-                border = androidx.compose.foundation.BorderStroke(
-                    width = 3.dp,
-                    color = feedbackColor
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("question_card")
-            ) {
-                Column(
+            if (isWideScreen) {
+                // Tablet / Landscape Split Row View
+                Row(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .fillMaxSize()
+                        .padding(vertical = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(24.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (currentQuestion != null) {
-                        Text(
-                            text = currentQuestion.questionText,
-                            fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        Text(
-                            text = currentQuestion.formattedExpression,
-                            fontSize = 32.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            fontFamily = FontFamily.Monospace,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.testTag("text_expression")
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Typed Answer Box
-                        Box(
+                    // Left Pane: Question & Header
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        LinearProgressIndicator(
+                            progress = { if (totalCount > 0) currentNumber.toFloat() / totalCount else 0f },
                             modifier = Modifier
-                                .fillMaxWidth(0.85f)
-                                .height(56.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.surfaceVariant)
-                                .border(
-                                    width = 2.dp,
-                                    color = if (practiceState.userAnswer.isNotEmpty()) MaterialTheme.colorScheme.primary else Color.Transparent,
-                                    shape = RoundedCornerShape(12.dp)
-                                ),
-                            contentAlignment = Alignment.Center
+                                .fillMaxWidth()
+                                .height(6.dp)
+                                .clip(RoundedCornerShape(3.dp)),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = if (practiceState.userAnswer.isEmpty()) "Type answer..." else practiceState.userAnswer,
-                                fontSize = 26.sp,
+                                text = "Correct: ${practiceState.correctCount}",
                                 fontWeight = FontWeight.Bold,
-                                fontFamily = FontFamily.Monospace,
-                                color = if (practiceState.userAnswer.isEmpty()) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.testTag("text_user_answer")
+                                fontSize = 13.sp,
+                                color = GreenCorrect
+                            )
+                            Text(
+                                text = "Wrong: ${practiceState.wrongCount}",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp,
+                                color = RedWrong
                             )
                         }
 
-                        // Immediate Feedback Indicator
-                        AnimatedVisibility(
-                            visible = practiceState.feedback !is AnswerFeedback.Idle,
-                            enter = fadeIn(),
-                            exit = fadeOut()
-                        ) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            when (val fb = practiceState.feedback) {
-                                is AnswerFeedback.Correct -> {
-                                    Text(
-                                        text = "✓ CORRECT!",
-                                        fontWeight = FontWeight.ExtraBold,
-                                        fontSize = 16.sp,
-                                        color = GreenCorrect
-                                    )
-                                }
-                                is AnswerFeedback.Wrong -> {
-                                    Text(
-                                        text = "✗ WRONG! Answer: ${fb.correctAnswer}",
-                                        fontWeight = FontWeight.ExtraBold,
-                                        fontSize = 14.sp,
-                                        color = RedWrong
-                                    )
-                                }
-                                else -> {}
-                            }
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        QuestionDisplayCard(
+                            currentQuestion = currentQuestion,
+                            practiceState = practiceState,
+                            feedbackColor = feedbackColor
+                        )
+                    }
+
+                    // Right Pane: Numeric Keypad & Actions
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .widthIn(max = 420.dp),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        NumericKeypad(onKeyClick = { key -> viewModel.onKeyInput(key) })
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        PracticeActionButtons(
+                            practiceState = practiceState,
+                            onSkip = { viewModel.skipQuestion() },
+                            onSubmit = { viewModel.submitAnswer() }
+                        )
+                    }
+                }
+            } else {
+                // Portrait / Mobile Vertical Stack View
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .widthIn(max = 500.dp)
+                        .align(Alignment.TopCenter),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    LinearProgressIndicator(
+                        progress = { if (totalCount > 0) currentNumber.toFloat() / totalCount else 0f },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(6.dp)
+                            .clip(RoundedCornerShape(3.dp)),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Correct: ${practiceState.correctCount}",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp,
+                            color = GreenCorrect
+                        )
+                        Text(
+                            text = "Wrong: ${practiceState.wrongCount}",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp,
+                            color = RedWrong
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    QuestionDisplayCard(
+                        currentQuestion = currentQuestion,
+                        practiceState = practiceState,
+                        feedbackColor = feedbackColor
+                    )
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    NumericKeypad(onKeyClick = { key -> viewModel.onKeyInput(key) })
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    PracticeActionButtons(
+                        practiceState = practiceState,
+                        onSkip = { viewModel.skipQuestion() },
+                        onSubmit = { viewModel.submitAnswer() }
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun QuestionDisplayCard(
+    currentQuestion: GeneratedQuestion?,
+    practiceState: PracticeState,
+    feedbackColor: Color
+) {
+    Card(
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = androidx.compose.foundation.BorderStroke(width = 3.dp, color = feedbackColor),
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("question_card")
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            if (currentQuestion != null) {
+                Text(
+                    text = currentQuestion.questionText,
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = currentQuestion.formattedExpression,
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontFamily = FontFamily.Monospace,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.testTag("text_expression")
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Typed Answer Box
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.85f)
+                        .height(56.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .border(
+                            width = 2.dp,
+                            color = if (practiceState.userAnswer.isNotEmpty()) MaterialTheme.colorScheme.primary else Color.Transparent,
+                            shape = RoundedCornerShape(12.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = if (practiceState.userAnswer.isEmpty()) "Type answer..." else practiceState.userAnswer,
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Monospace,
+                        color = if (practiceState.userAnswer.isEmpty()) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.testTag("text_user_answer")
+                    )
+                }
+
+                // Immediate Feedback Indicator
+                AnimatedVisibility(
+                    visible = practiceState.feedback !is AnswerFeedback.Idle,
+                    enter = fadeIn(),
+                    exit = fadeOut()
+                ) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    when (val fb = practiceState.feedback) {
+                        is AnswerFeedback.Correct -> {
+                            Text(
+                                text = "✓ CORRECT!",
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 16.sp,
+                                color = GreenCorrect
+                            )
                         }
+                        is AnswerFeedback.Wrong -> {
+                            Text(
+                                text = "✗ WRONG! Answer: ${fb.correctAnswer}",
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 14.sp,
+                                color = RedWrong
+                            )
+                        }
+                        else -> {}
                     }
                 }
             }
+        }
+    }
+}
 
-            Spacer(modifier = Modifier.weight(1f))
-
-            // Numeric Keypad Grid
-            NumericKeypad(
-                onKeyClick = { key -> viewModel.onKeyInput(key) }
+@Composable
+fun PracticeActionButtons(
+    practiceState: PracticeState,
+    onSkip: () -> Unit,
+    onSubmit: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Button(
+            onClick = onSkip,
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+            modifier = Modifier
+                .weight(1f)
+                .height(50.dp)
+                .testTag("btn_skip")
+        ) {
+            Icon(
+                imageVector = Icons.Filled.SkipNext,
+                contentDescription = "Skip",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text("SKIP", color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold)
+        }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Submit & Skip Action Buttons
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Button(
-                    onClick = { viewModel.skipQuestion() },
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(50.dp)
-                        .testTag("btn_skip")
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.SkipNext,
-                        contentDescription = "Skip",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("SKIP", color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold)
-                }
-
-                Button(
-                    onClick = { viewModel.submitAnswer() },
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                    enabled = practiceState.userAnswer.isNotEmpty() && practiceState.feedback is AnswerFeedback.Idle,
-                    modifier = Modifier
-                        .weight(2f)
-                        .height(50.dp)
-                        .testTag("btn_submit")
-                ) {
-                    Icon(imageVector = Icons.Filled.Send, contentDescription = "Submit")
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("SUBMIT", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
+        Button(
+            onClick = onSubmit,
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+            enabled = practiceState.userAnswer.isNotEmpty() && practiceState.feedback is AnswerFeedback.Idle,
+            modifier = Modifier
+                .weight(2f)
+                .height(50.dp)
+                .testTag("btn_submit")
+        ) {
+            Icon(imageVector = Icons.Filled.Send, contentDescription = "Submit")
+            Spacer(modifier = Modifier.width(6.dp))
+            Text("SUBMIT", fontWeight = FontWeight.Bold, fontSize = 16.sp)
         }
     }
 }
